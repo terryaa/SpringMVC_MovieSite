@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<mapper namespace="loginlog">
+<resultMap id="month_count" type="hashmap">
+	<result property="month" column="month"></result>
+	<result property="count" column="count"></result>
+</resultMap>
+<!-- 모든 로그인 기록 수 카운트 -->
+	<select id="loginlogcount_all" resultType="int">
+		select count (*) from login_log
+	</select>
+<!-- 오늘의 로그인로그 개수 카운트 -->
+	<select id="loginlogcount_currentdate" resultType="int">
+		select count
+		(*) from login_log where trunc(loginlog_login) like trunc(sysdate)
+	</select>
+	<!-- 어제의 로그인로그 개수 카운트 -->
+	<select id="loginlogcount_yesterday" resultType="int">
+		select count
+		(*) from login_log where trunc(loginlog_login) like trunc(sysdate-1)
+	</select>
+	<!-- 최근 5일간의 로그인 회원의 수 카운트(배열) -->
+	<select id="loginlogcount_days" resultMap="month_count">
+	<![CDATA[
+select extract(day from trunc(loginlog_login) ) as month,count(*) as count from login_log
+group by trunc(loginlog_login) 
+having trunc(loginlog_login)<=trunc(sysdate) and trunc(loginlog_login)>=(trunc(sysdate)-5) order by trunc(loginlog_login) asc
+]]>
+	</select>
+		<!-- 최근 5달간의 로그인 회원의 수 카운트(배열) -->
+		<select id="loginlogcount_months" resultMap="month_count">
+		
+			<![CDATA[
+select extract(month from trunc(loginlog_login) ) as month,sum(count) as count from 
+(select loginlog_login ,count(*) as count from login_log
+group by loginlog_login
+having trunc(loginlog_login) <=last_day(trunc(sysdate)) and trunc(loginlog_login)>=last_day( add_months(trunc(sysdate),-5) )
+order by trunc(loginlog_login) asc)
+group by extract(month from trunc(loginlog_login))
+order by extract(month from trunc(loginlog_login)) asc
+]]>
+
+	</select>
+		<!-- 최근 5년간의 로그인 회원의 수 카운트(배열) -->
+	<select id="loginlogcount_years" resultMap="month_count">
+				<![CDATA[
+select   extract(year from trunc(loginlog_login) )-2000 as month,count(*) as count from login_log
+group by extract(year from trunc(loginlog_login))
+having 
+extract(year from trunc(loginlog_login)) <= extract(year from trunc(sysdate)) and
+extract(year from trunc(loginlog_login)) >=  (extract(year from trunc(sysdate))-4)
+order by extract(year from trunc(loginlog_login)) asc
+]]>
+	</select>
+<insert id="login" parameterType="llvo">
+  		insert into login_log values(
+  		login_out_logging_sq.nextVal,#{member_number},sysdate,sysdate)
+  	</insert>
+  	<update id="logout" parameterType="llvo">
+  		update login_log
+			set loginlog_logout = sysdate
+			where loginlog_number = #{loginlog_number}
+  	</update>
+  	<select id="che" parameterType="llvo" resultType="int">
+  		select loginlog_number, rownum from (select * from login_log order by loginlog_number desc)
+  		where rownum in (1) and member_number = #{member_number}
+  	</select>
+</mapper>

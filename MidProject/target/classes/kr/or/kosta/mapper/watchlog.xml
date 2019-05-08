@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+  
+  
+  <mapper namespace="watchlog">
+  <resultMap id="month_count" type="hashmap">
+	<result property="month" column="month"></result>
+	<result property="count" column="count"></result>
+</resultMap>
+<!--   모든 영화 시청 수 카운트 -->
+  <select id="watchlogcount_all" resultType="int">
+select count (*) from watch_log
+  </select>
+<!--   오늘의 영화 시청 수 카운트 -->
+  <select id="watchlogcount_currentdate" resultType="int">
+  select count (*) from watch_log where trunc(watchlog_date) like trunc(sysdate)
+  </select>
+  
+  <!--   어제의 영화 시청 수 카운트 -->
+  <select id="watchlogcount_yesterday" resultType="int">
+  select count (*) from watch_log where trunc(watchlog_date) like trunc(sysdate-1)
+  </select>
+    <!-- 최근 5년간의  영화 시청 수 카운트(배열) -->
+  <select id="watchlogcount_days" resultMap="month_count">
+      <![CDATA[
+  select extract(day from trunc(watchlog_date) ) as month,count(*) as count from watch_log
+group by trunc(watchlog_date)
+having trunc(watchlog_date)<=trunc(sysdate) and trunc(watchlog_date)>=(trunc(sysdate)-5) order by trunc(watchlog_date) asc
+	]]>
+  </select>
+    <!-- 최근 5년간의  영화 시청 수 카운트(배열) -->
+    <select id="watchlogcount_months" resultMap="month_count">
+        <![CDATA[
+  select extract(month from trunc(watchlog_date) ) as month,sum(count) as count from 
+(select  watchlog_date  ,count(*) as count from watch_log
+group by watchlog_date
+having trunc(watchlog_date)  <=last_day(trunc(sysdate)) and trunc(watchlog_date) >=last_day( add_months(trunc(sysdate),-5) )
+order by  trunc(watchlog_date)  asc)
+group by extract(month from  trunc(watchlog_date) )
+order by extract(month from  trunc(watchlog_date) ) asc
+	]]>
+  </select>
+  <!-- 최근 5년간의  영화 시청 수 카운트(배열) -->
+    <select id="watchlogcount_years" resultMap="month_count">
+        <![CDATA[
+  select extract(year from trunc(watchlog_date) )-2000 as month,count(*) as count from watch_log
+group by extract(year from trunc(watchlog_date))
+having 
+extract(year from trunc(watchlog_date)) <= extract(year from trunc(sysdate)) and
+extract(year from trunc(watchlog_date)) >=  (extract(year from trunc(sysdate))-4)
+order by extract(year from trunc(watchlog_date)) asc
+	]]>
+  </select>
+  </mapper>

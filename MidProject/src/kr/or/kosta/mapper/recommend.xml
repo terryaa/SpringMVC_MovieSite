@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="recommend">
+
+<!-- 태그정보를 저장할 태그 리절트맵 -->
+<resultMap id="tagVo" type="tvo">
+	<id property="tag_category_num" column="tag_category_num"/>
+	<result property="tag_table_num" column="tag_table_num"/>
+	<result property="sum" column="sum"/>
+	<result property="sum_div_total" column="sum_div_total"/>
+</resultMap>
+<!-- 회원의 리스트에잇는 영화들의 태그와 태그가중치를 계산하여 주는 프로시져 -->
+<select id="getcount_list_inrank" parameterType="int" resultType="int">
+ <![CDATA[
+select count(count(u_list.movie_number)) from table(getsumoflist(#{member_number})) u_list,
+(select movie_number
+from (SELECT movie_number, MOVIE_NUMBER_OF_AUDIENCE,
+PERCENT_RANK() OVER (ORDER BY MOVIE_NUMBER_OF_AUDIENCE) AS pr
+FROM MOVIE)
+where pr >= .8
+order by pr desc) rank_list
+where u_list.movie_number=rank_list.movie_number group by u_list.movie_number
+]]>
+</select>
+<select id="getmylist_proc" statementType="CALLABLE" parameterType="utwl">
+{ CALL recommend_avg_update(
+	#{member_number, mode=IN,jdbcType=NUMERIC,javaType=int},
+	#{list,mode=OUT,jdbcType=CURSOR,javaType=Resultset,resultMap=tagVo})
+}
+
+</select>
+<select id="getmylist_movie_count" parameterType="int" resultType="int">
+select   count(count(movie_number)) from table(getsumoflist(#{member_number}))
+group by movie_number
+</select>
+<select id="getrank_div_mylist_moviecount" parameterType="int" resultType="double">
+select rankdivtotalmovie(#{member_number}) from dual
+</select>
+<select id="mynum" parameterType="mvo" resultType="int">
+  		select member_number from member where member_id=${member_id}
+  	</select>
+  	<select id="group" parameterType="mvo" resultType="int">
+  		select member_group from member where member_id=${member_id}
+  	</select>
+  	<select id="grouplist" parameterType="mvo" resultType="list">
+  		select member_id from member where member_community_number = ${member_community_number}
+  	</select>
+  	<select id="gsblist" parameterType="mvo" resultType="list">
+  		select movie_number from my_rank_talbe where member_number = ${member_number}
+  	</select>
+  	<select id="likelist" parameterType="mvo" resultType="list">
+  		select movie_number, rownum from List_Table where movie_number = ${movie_number} and list_category_number = '2' and rownum in (1,2,3)
+  	</select>
+</mapper>

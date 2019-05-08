@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+  
+<mapper namespace="movie">
+
+<!-- 판권구매개수 지난달 -->
+<select id="moviepurchase_pastmonth" resultType="int">
+<![CDATA[
+select count(*) from
+(select movie_purchase_date from movie
+group by movie_purchase_date
+having movie_purchase_date >=last_day( add_months(sysdate,-2) )
+and movie_purchase_date<= add_months(sysdate,-1) 
+order by movie_purchase_date asc)
+group by extract(month from movie_purchase_date)
+order by extract(month from movie_purchase_date) asc
+]]>
+</select>
+<!-- 판권구매개수 이번달 -->
+<select id="moviepurchase_thismonth" resultType="int">
+<![CDATA[
+select count(*) from
+(select movie_purchase_date from movie
+where movie_purchase_date >=last_day( add_months(sysdate,-1) )
+and movie_purchase_date<=sysdate )
+group by extract(month from movie_purchase_date)
+order by extract(month from movie_purchase_date) asc
+]]>
+</select>
+<!-- 판권구매액 지난달 -->
+<select id="moviecopyrightcost_pastmonth" resultType="int">
+<![CDATA[
+select sum(movie_copyright_cost) from
+(select movie_copyright_cost from movie 
+where movie_purchase_date >=last_day( add_months(sysdate,-2) )
+and movie_purchase_date<=add_months(sysdate,-1) )
+]]>
+</select>
+<!-- 판권구매액 이번달 -->
+<select id="moviecopyrightcost_thismonth" resultType="int">
+<![CDATA[
+select sum(movie_copyright_cost) from
+(select movie_copyright_cost from movie 
+where movie_purchase_date >=last_day( add_months(sysdate,-1) )
+and movie_purchase_date<= sysdate )
+]]>
+</select>
+<!-- 수익 지난달 -->
+<select id="movieinvestment_pastmonth" resultType="int">
+<![CDATA[
+select sum(movie_investment) from
+(select movie_investment from movie 
+where movie_purchase_date >=last_day( add_months(sysdate,-2) )
+and movie_purchase_date<= add_months(sysdate,-1) )
+]]>
+</select>
+<!-- 수익 이번달 -->
+<select id="movieinvestment_thismonth" resultType="int">
+<![CDATA[
+select sum(movie_investment) from
+(select movie_investment from movie 
+where movie_purchase_date >=last_day( add_months(sysdate,-1) )
+and movie_purchase_date<=sysdate )
+]]>
+</select>
+
+
+</mapper>

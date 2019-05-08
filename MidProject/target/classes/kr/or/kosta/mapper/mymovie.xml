@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mymovie">
+	<select id="search" parameterType="sevo" resultMap="searchtc">
+		select
+		DISTINCT m.movie_title,m.movie_number,m.movie_rating,m.movie_copyright_cost,m.movie_investment,m.movie_number_of_audience,
+		m.movie_open_date,m.movie_price,m.movie_purchase_date,m.movie_view_count,m.movie_watch_count
+		from movie m,
+		(select movie_number from movie_tag	where tag_table_num	in (select tag_table_num from tag_table
+		<where>
+			<choose>
+				<when test="selectsearch != '제목' ">
+					tag_category_num in(select tag_category_num from tag_category
+					<where>
+								tag_category_name = '${selectsearch}'
+					</where>
+					)
+					and tag_name like '%' || '${search}' || '%'
+				</when>
+				<otherwise></otherwise>
+			</choose>
+		</where>
+		)) r
+		where r.movie_number = m.movie_number
+		<choose>
+			<when test="selectsearch != '제목'">
+			</when>
+			<otherwise>
+				and m.movie_title like '%'||'${search}'||'%'
+			</otherwise>
+		</choose>
+		order by m.movie_number_of_audience desc
+	</select>
+
+	<resultMap type="movievo" id="searchtc"><!-- 무비 테이블에 관한 정보를 가져오는 리절트맵 -->
+		<id property="movie_number" column="movie_number" javaType="String"></id>
+		<result property="movie_title" column="movie_title"/>
+		<result property="movie_number" column="movie_number"/>
+		<result property="movie_open_date" column="movie_open_date"/>
+		<result property="movie_purchase_date" column="movie_purchase_date"/>
+		<result property="movie_rating" column="movie_rating"/>
+		<result property="movie_view_count" column="movie_view_count"/>
+		<result property="movie_watch_count" column="movie_watch_count"/>
+		<result property="movie_number_of_audience" column="movie_number_of_audience"/>
+		<result property="movie_inverstment" column="movie_inverstment"/>
+		<result property="movie_copyright_cost" column="movie_copyright_cost"/>
+		<collection property="mtlist" javaType="java.util.List"
+		resultMap="mtsearch" ofType="movietagvo"></collection>
+	</resultMap>
+
+	<resultMap type="movietagvo" id="mtsearch"><!-- 무비-태그 테이블 -->
+		<result property="movie_number" column="movie_number"/>
+		<result property="tag_table_num" column="tag_table_num"/>
+		<collection property="tlist" javaType="java.util.List"
+		resultMap="ttsearch" ofType="tvo"></collection>
+	</resultMap>
+	
+	<resultMap type="tvo" id="ttsearch"><!-- 태그 테이블 -->
+		<result property="tag_table_num" column="tag_table_num"/>
+		<result property="tag_name" column="tag_name"/>
+		<result property="tag_category_num" column="tag_category_num"/>
+		<collection property="tclist" javaType="java.util.List"
+		resultMap="tcsearch" ofType="tcvo"></collection>
+	</resultMap>
+	
+	<resultMap type="tcvo" id="tcsearch"><!-- 태그 카테고리 테이블 -->
+		<result property="tag_category_name" column="tag_category_name"/>
+		<result property="tag_category_num" column="tag_category_num"/>
+	</resultMap>
+</mapper>
+  <!-- 태그 카테고리의 내용을 태그 테이블로 리스트로 불러오고, 태그 테이블을  무비-태그 테이블로 리스트로 가져온뒤 무비-태그 테이블을 무비테이블에서 
+  리스트로 가져오는 형태의 리절트 맵이다.-->
+  
+  
+  <!-- 검색 카테고리가 제목이 아닐시에는 아래와 같은 쿼리가 적용되고,
+select DISTINCT m.movie_title,m.movie_number,m.movie_rating,m.movie_copyright_cost,
+m.movie_investment,m.movie_number_of_audience,
+m.movie_open_date,m.movie_price,m.movie_purchase_date,m.movie_view_count,m.movie_watch_count
+from movie m , 
+    (select movie_number from movie_tag
+     where tag_table_num in(select tag_table_num from tag_table 
+        where tag_category_num=(select tag_category_num from tag_category where tag_category_name ='장르')
+        and tag_name='액션')) r
+where r.movie_number = m.movie_number
+order by movie_open_date desc;
+	
+	검색 카테고리가 제목일때에는
+select DISTINCT m.movie_title,m.movie_number,m.movie_rating,m.movie_copyright_cost,m.movie_investment,m.movie_number_of_audience,
+m.movie_open_date,m.movie_price,m.movie_purchase_date,m.movie_view_count,m.movie_watch_count
+from movie m , 
+    (select movie_number from movie_tag
+     where tag_table_num in(select tag_table_num from tag_table)) r
+where r.movie_number = m.movie_number
+and movie_title='과속스캔들'
+order by movie_open_date desc;
+
+	형태로 적용된다.	
+-->
+  
+    	

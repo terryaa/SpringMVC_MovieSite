@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+  
+  <mapper namespace ="alg">
+  	
+  	
+  	<select id="getMovie_number_InTags" resultType="GM_mtvo" parameterType="list">
+  		select * from movie_tag where tag_table_num in 
+  		<foreach collection="list" item="tag" open="(" separator="," close=")" >
+  			#{tag}
+  		</foreach>
+  	</select>
+  	
+  	<select id="getMovie_tot_price" resultType="int" parameterType="String">
+  		select count(decode(movie_price,5,1)) * 10000 +
+        count(decode(movie_price,4,1)) * 5000 +
+        count(decode(movie_price,3,1)) * 2500 +
+        count(decode(movie_price,2,1)) * 1000 as "price"
+		from movie_sold_log where movie_number=#{movie_number}
+  	</select>
+  	
+  	<select id="getMember_of_sold_log" resultType="String" parameterType="map">
+  		select member_number from Movie_Sold_Log where movie_number=#{movie_number} and movie_price=#{movie_price}
+  	</select>
+  	
+  	
+  	
+  	
+  </mapper>

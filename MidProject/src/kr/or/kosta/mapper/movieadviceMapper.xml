@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="movieadvice">
+
+	<insert id="insert" parameterType="movievo">
+		insert into Movie_Modify_Log(
+			viewlog_number,
+			movie_number,
+			modify_before_price,
+			modifylog_date
+		
+		)values(
+			movie_modify_log_seq.nextVal,
+			#{movie_number},
+			#{movie_price},
+			sysdate
+		)
+		
+	
+	</insert>
+
+</mapper>
+
+
+
+
+
+
+

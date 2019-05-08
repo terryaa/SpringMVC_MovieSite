@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+   <mapper namespace="outputmovierecommend">
+
+       
+     
+     <select id="select" parameterType="int" resultType="String">
+     
+select movie_number from(
+   select member_number, movie_number
+from my_rank_table
+where member_number in
+       (select member_number
+           from member
+               where member_community_number = (select member_community_number from member where member_number = #{member_number}))
+and member_number not in #{member_number}
+and movie_number not in (select movie_number from Movie_Sold_Log where member_number = #{member_number})
+and rank_number = 1
+order by dbms_random.random
+)
+where rownum = 1
+
+     
+
+   </select>
+   
+   <select id="userid" parameterType="String" resultType="int">
+   	select member_number from member where member_id=#{member_id}
+   </select>
+   </mapper>
